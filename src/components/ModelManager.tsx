@@ -13,6 +13,7 @@ interface ModelManagerProps {
   onDeleteModel: (modelName: string) => Promise<void>;
   pullStatus: PullStatus | null;
   isPulling: boolean;
+  onShowModelDetails?: (modelName: string) => void;
 }
 
 export default function ModelManager({
@@ -25,10 +26,10 @@ export default function ModelManager({
   onDeleteModel,
   pullStatus,
   isPulling,
+  onShowModelDetails,
 }: ModelManagerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [newModelName, setNewModelName] = useState("");
-  const [selectedModelInfo, setSelectedModelInfo] = useState<OllamaModel | null>(null);
 
   const filteredModels = models.filter((model) =>
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -188,11 +189,9 @@ export default function ModelManager({
                     {/* View Info */}
                     <button
                       id={`info-model-${model.name.replace(/[:.]/g, "-")}`}
-                      onClick={() => setSelectedModelInfo(selectedModelInfo?.name === model.name ? null : model)}
-                      className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100/80 transition-colors cursor-pointer ${
-                        selectedModelInfo?.name === model.name ? "bg-slate-100 text-indigo-600" : ""
-                      }`}
-                      title="View parameters"
+                      onClick={() => onShowModelDetails?.(model.name)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors cursor-pointer"
+                      title="Inspect full model metadata & Modelfile"
                     >
                       <Info size={13} />
                     </button>
@@ -217,46 +216,6 @@ export default function ModelManager({
           )}
         </div>
       </div>
-
-      {/* Model Parameter Specs overlay / section */}
-      {selectedModelInfo && (
-        <div className="p-4 bg-slate-50 border border-indigo-100/60 rounded-xl text-xs space-y-2.5 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-slate-200/50 pb-1.5">
-            <span className="font-semibold text-slate-700">Model Metadata: {selectedModelInfo.name}</span>
-            <button
-              onClick={() => setSelectedModelInfo(null)}
-              className="text-[10px] text-indigo-600 hover:underline font-medium cursor-pointer"
-            >
-              Hide Details
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-slate-600">
-            <div>
-              <span className="text-slate-400 font-medium block">Family:</span>
-              <span className="font-medium">{selectedModelInfo.details?.family || "Unknown"}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 font-medium block">Format:</span>
-              <span className="font-mono">{selectedModelInfo.details?.format || "GGUF"}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 font-medium block">Parameter Size:</span>
-              <span className="font-medium">{selectedModelInfo.details?.parameter_size || "Unknown"}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 font-medium block">Quantization:</span>
-              <span className="font-mono">{selectedModelInfo.details?.quantization_level || "Unknown"}</span>
-            </div>
-            <div className="col-span-2">
-              <span className="text-slate-400 font-medium block">Digest:</span>
-              <span className="font-mono break-all text-[9px] bg-white p-1 rounded border border-slate-100 block">
-                {selectedModelInfo.digest}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

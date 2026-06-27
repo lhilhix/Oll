@@ -4,6 +4,7 @@ import ConnectionSettings from "./components/ConnectionSettings";
 import ModelManager from "./components/ModelManager";
 import ParameterSettings from "./components/ParameterSettings";
 import ChatInterface from "./components/ChatInterface";
+import ModelDetailsModal from "./components/ModelDetailsModal";
 import { ConnectionConfig, OllamaModel, Conversation, Message, OllamaParams, PullStatus } from "./types";
 import { readOllamaStream } from "./utils/ollama";
 
@@ -74,6 +75,15 @@ export default function App() {
   );
 
   const [isStreaming, setIsStreaming] = useState(false);
+
+  // Model Details Inspector Modal State
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsModalModelName, setDetailsModalModelName] = useState("");
+
+  const handleShowModelDetails = (modelName: string) => {
+    setDetailsModalModelName(modelName);
+    setDetailsModalOpen(true);
+  };
 
   // Initial Configuration Checks & Automatic connection attempt
   useEffect(() => {
@@ -651,6 +661,7 @@ export default function App() {
             onDeleteModel={handleDeleteModel}
             pullStatus={pullStatus}
             isPulling={isPulling}
+            onShowModelDetails={handleShowModelDetails}
           />
 
           {/* Parameters sliders */}
@@ -674,9 +685,18 @@ export default function App() {
             conversations={conversations}
             onSelectConversation={handleSelectConversation}
             onDeleteConversation={handleDeleteConversation}
+            onShowModelDetails={handleShowModelDetails}
           />
         </div>
       </main>
+
+      {/* Model Details Inspector Modal */}
+      <ModelDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        modelName={detailsModalModelName}
+        connection={connection}
+      />
 
       {/* Humble Footer */}
       <footer className="bg-white border-t border-slate-100 mt-12 py-5 text-center text-xs text-slate-400">

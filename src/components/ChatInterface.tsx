@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   Cpu,
+  Info,
 } from "lucide-react";
 import { Conversation, Message } from "../types";
 import { parseReasoningContent, formatDuration } from "../utils/ollama";
@@ -30,6 +31,7 @@ interface ChatInterfaceProps {
   conversations: Conversation[];
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
+  onShowModelDetails?: (modelName: string) => void;
 }
 
 export default function ChatInterface({
@@ -42,6 +44,7 @@ export default function ChatInterface({
   conversations,
   onSelectConversation,
   onDeleteConversation,
+  onShowModelDetails,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [showSystemSettings, setShowSystemSettings] = useState(false);
@@ -317,9 +320,21 @@ export default function ChatInterface({
             </h2>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
               <span>Active Model:</span>
-              <span className="font-mono text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100/30">
-                {activeConversation?.model || "Select a model first"}
-              </span>
+              {activeConversation ? (
+                <button
+                  id="model-details-toggle"
+                  onClick={() => onShowModelDetails?.(activeConversation.model)}
+                  className="font-mono text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-200 px-1.5 py-0.5 rounded border border-indigo-100/30 flex items-center gap-1 transition-all cursor-pointer group"
+                  title="Click to inspect model parameters, architecture, and Modelfile"
+                >
+                  {activeConversation.model}
+                  <Info size={11} className="text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                </button>
+              ) : (
+                <span className="font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                  Select a model first
+                </span>
+              )}
             </div>
           </div>
         </div>
