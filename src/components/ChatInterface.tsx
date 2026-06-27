@@ -394,53 +394,86 @@ export default function ChatInterface({
       </div>
 
       {/* Main chat window layout (sidebar inside chat for session listing + messages) */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="flex-1 flex overflow-hidden min-h-0 relative">
         {/* Sessions list */}
         {showThreadsSidebar && (
-          <div className="w-56 border-r border-slate-100 flex flex-col bg-slate-50/40 shrink-0 select-none animate-fade-in">
-            <div className="p-3 border-b border-slate-100/60">
-              <button
-                id="new-chat-session-btn"
-                onClick={onNewConversation}
-                className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 border border-indigo-100/30 transition-all cursor-pointer"
-              >
-                <Plus size={14} />
-                New Thread
-              </button>
-            </div>
+          <>
+            {/* Backdrop for mobile threads list drawer */}
+            <div
+              className="absolute inset-0 bg-slate-900/30 backdrop-blur-xs z-20 md:hidden animate-fade-in"
+              onClick={() => setShowThreadsSidebar(false)}
+            />
+            {/* Threads panel container */}
+            <div className="absolute md:static left-0 top-0 bottom-0 w-60 md:w-56 border-r border-slate-100 flex flex-col bg-white md:bg-slate-50/40 shrink-0 select-none animate-fade-in z-30 shadow-xl md:shadow-none">
+              
+              {/* Mobile/Tablet close header */}
+              <div className="flex items-center justify-between px-3.5 py-3 border-b border-slate-100 md:hidden bg-slate-50">
+                <span className="font-bold text-xs text-slate-700 tracking-tight">Active Threads</span>
+                <button
+                  onClick={() => setShowThreadsSidebar(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-colors"
+                  title="Hide thread drawer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {conversations.length === 0 ? (
-                <p className="text-[10px] text-slate-400 text-center py-6">No threads yet</p>
-              ) : (
-                conversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    className={`group relative flex items-center justify-between p-2 rounded-lg transition-all ${
-                      activeConversation?.id === conv.id
-                        ? "bg-white border border-slate-100 text-indigo-600 font-semibold"
-                        : "text-slate-500 hover:bg-slate-100/60 hover:text-slate-700"
-                    }`}
-                  >
-                    <button
-                      id={`select-session-${conv.id}`}
-                      onClick={() => onSelectConversation(conv.id)}
-                      className="flex-1 text-left text-xs truncate mr-4 pr-1 cursor-pointer"
+              <div className="p-3 border-b border-slate-100/60">
+                <button
+                  id="new-chat-session-btn"
+                  onClick={() => {
+                    onNewConversation();
+                    // Auto-close drawer on mobile to show the empty slate immediately
+                    if (window.innerWidth < 768) {
+                      setShowThreadsSidebar(false);
+                    }
+                  }}
+                  className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 border border-indigo-100/30 transition-all cursor-pointer"
+                >
+                  <Plus size={14} />
+                  New Thread
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {conversations.length === 0 ? (
+                  <p className="text-[10px] text-slate-400 text-center py-6">No threads yet</p>
+                ) : (
+                  conversations.map((conv) => (
+                    <div
+                      key={conv.id}
+                      className={`group relative flex items-center justify-between p-2 rounded-lg transition-all ${
+                        activeConversation?.id === conv.id
+                          ? "bg-white border border-slate-100 text-indigo-600 font-semibold"
+                          : "text-slate-500 hover:bg-slate-100/60 hover:text-slate-700"
+                      }`}
                     >
-                      {conv.title}
-                    </button>
-                    <button
-                      id={`delete-session-${conv.id}`}
-                      onClick={() => onDeleteConversation(conv.id)}
-                      className="opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-opacity p-1 rounded hover:bg-rose-50 cursor-pointer"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))
-              )}
+                      <button
+                        id={`select-session-${conv.id}`}
+                        onClick={() => {
+                          onSelectConversation(conv.id);
+                          // Auto close threads panel on mobile upon selection to focus on the chat
+                          if (window.innerWidth < 768) {
+                            setShowThreadsSidebar(false);
+                          }
+                        }}
+                        className="flex-1 text-left text-xs truncate mr-4 pr-1 cursor-pointer"
+                      >
+                        {conv.title}
+                      </button>
+                      <button
+                        id={`delete-session-${conv.id}`}
+                        onClick={() => onDeleteConversation(conv.id)}
+                        className="opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-opacity p-1 rounded hover:bg-rose-50 cursor-pointer"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Conversation Box */}
@@ -488,7 +521,7 @@ export default function ChatInterface({
           )}
 
           {/* Messages Pane */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
             {!activeConversation ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-3 select-none">
                 <Bot size={40} className="text-slate-300 animate-pulse" />
@@ -515,20 +548,20 @@ export default function ChatInterface({
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3.5 max-w-full ${isAssistant ? "justify-start" : "justify-end"}`}
+                    className={`flex gap-2 sm:gap-3.5 max-w-full ${isAssistant ? "justify-start" : "justify-end"}`}
                   >
-                    {/* User / Bot Avatar */}
+                    {/* User / Bot Avatar - Responsive hide on small screens */}
                     {isAssistant && (
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100/60 text-indigo-600 flex items-center justify-center shrink-0 self-start select-none">
+                      <div className="hidden sm:flex w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100/60 text-indigo-600 items-center justify-center shrink-0 self-start select-none">
                         <Bot size={16} />
                       </div>
                     )}
-
+                    
                     {/* Chat Bubble Container */}
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3.5 border ${
+                      className={`max-w-[92%] sm:max-w-[82%] rounded-2xl px-3.5 sm:px-4.5 py-3 border ${
                         isAssistant
-                          ? "bg-white text-slate-800 border-slate-100/80 shadow-sm"
+                          ? "bg-white text-slate-800 border-slate-100/80 shadow-xs"
                           : "bg-indigo-600 text-white border-indigo-700 shadow-sm shadow-indigo-600/5"
                       }`}
                     >
@@ -536,7 +569,7 @@ export default function ChatInterface({
                     </div>
 
                     {!isAssistant && (
-                      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200/50 text-slate-600 flex items-center justify-center shrink-0 self-start select-none">
+                      <div className="hidden sm:flex w-8 h-8 rounded-full bg-slate-100 border border-slate-200/50 text-slate-600 items-center justify-center shrink-0 self-start select-none">
                         <User size={16} />
                       </div>
                     )}
@@ -548,8 +581,8 @@ export default function ChatInterface({
           </div>
 
           {/* Prompt input Form */}
-          <div className="p-4 bg-white border-t border-slate-100 select-none">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+          <div className="p-3 sm:p-4 bg-white border-t border-slate-100/80 select-none shadow-sm">
+            <form onSubmit={handleSubmit} className="flex gap-2 max-w-5xl mx-auto">
               <input
                 id="chat-prompt-input"
                 type="text"
@@ -563,15 +596,15 @@ export default function ChatInterface({
                     ? "Streaming Ollama response..."
                     : `Prompt ${activeConversation.model}...`
                 }
-                className="flex-1 px-4 py-3 text-sm bg-slate-50/50 text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 sm:py-3 text-sm bg-slate-50/60 hover:bg-slate-50/80 focus:bg-white text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-500 transition-all disabled:opacity-50"
               />
               <button
                 id="send-prompt-btn"
                 type="submit"
                 disabled={!activeConversation || isStreaming || !input.trim()}
-                className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl shadow-sm cursor-pointer transition-all shrink-0"
+                className="p-2.5 sm:p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl shadow-xs hover:shadow-sm cursor-pointer transition-all shrink-0 flex items-center justify-center min-w-[42px] sm:min-w-[46px]"
               >
-                <Send size={18} />
+                <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
             </form>
             {activeConversation && activeConversation.systemPrompt && (

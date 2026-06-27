@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Server, Terminal, MessageSquare, Zap, Github, ShieldAlert, Cpu, Sliders } from "lucide-react";
+import { Server, Terminal, MessageSquare, Zap, Github, ShieldAlert, Cpu, Sliders, X } from "lucide-react";
 import ConnectionSettings from "./components/ConnectionSettings";
 import ModelManager from "./components/ModelManager";
 import ParameterSettings from "./components/ParameterSettings";
@@ -618,23 +618,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans select-none antialiased">
       {/* Global Navigation Header */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-30 shadow-sm/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-md shadow-indigo-600/10">
-              <Terminal size={20} />
+      <header className="bg-white border-b border-slate-100 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-md shadow-indigo-600/10 shrink-0">
+              <Terminal size={18} />
             </div>
-            <div>
-              <h1 className="text-base font-bold text-slate-800 tracking-tight">Ollama Cloud Client</h1>
-              <p className="text-[11px] font-medium text-slate-400">Interact with remote & self-hosted AI models</p>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight truncate">Ollama Cloud</h1>
+              <p className="hidden xs:block text-[10px] font-medium text-slate-400 truncate">Remote & Self-hosted AI Client</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-semibold">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold shrink-0">
             <button
               id="sidebar-toggle-btn"
               onClick={handleToggleSettingsSidebar}
-              className={`p-2 px-3 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm/5 ${
+              className={`p-1.5 sm:p-2 px-2.5 sm:px-3 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
                 showSettingsSidebar
                   ? "bg-indigo-50/50 border-indigo-100 text-indigo-600 hover:bg-indigo-50"
                   : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
@@ -642,20 +642,23 @@ export default function App() {
               title={showSettingsSidebar ? "Hide configuration controls" : "Show configuration controls"}
             >
               <Sliders size={14} />
-              <span className="hidden sm:inline font-bold">
+              <span className="hidden md:inline font-bold">
                 {showSettingsSidebar ? "Hide Controls" : "Show Controls"}
               </span>
             </button>
 
             {connection.isConnected ? (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Proxy Active: {new URL(connection.host).hostname}
+              <span className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl max-w-[140px] sm:max-w-xs truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                <span className="truncate text-[11px] sm:text-xs">
+                  <span className="sm:hidden font-bold">Active</span>
+                  <span className="hidden sm:inline">Active: {new URL(connection.host).hostname}</span>
+                </span>
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-xl border border-slate-200/50">
-                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                Disconnected
+              <span className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-slate-100 text-slate-500 rounded-xl border border-slate-200/50 text-[11px] sm:text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                <span className="font-bold">Offline</span>
               </span>
             )}
           </div>
@@ -663,50 +666,76 @@ export default function App() {
       </header>
 
       {/* Main Container Layout */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
-        {/* Left Control Column (Grid Span 4) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full relative">
+        {/* Left Control Column (Grid Span 4 on desktop, fixed overlay drawer on mobile/tablet) */}
         {showSettingsSidebar && (
-          <div className="lg:col-span-4 space-y-6 flex flex-col">
-            {/* Connection configuration */}
-            <ConnectionSettings
-              config={connection}
-              hostInput={hostInput}
-              tokenInput={tokenInput}
-              setHostInput={setHostInput}
-              setTokenInput={setTokenInput}
-              onConnect={() => testAndConnect(hostInput, tokenInput)}
-              isConnecting={connection.isChecking}
-              onDisconnect={handleDisconnect}
-              hasServerDefaults={hasServerDefaults}
-              defaultHost={defaultHost}
+          <>
+            {/* Backdrop for mobile drawer */}
+            <div
+              className="fixed inset-0 bg-slate-900/45 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+              onClick={() => setShowSettingsSidebar(false)}
             />
+            {/* Drawer/Sidebar Container */}
+            <div className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[380px] bg-white p-6 overflow-y-auto z-50 lg:static lg:w-auto lg:max-w-none lg:p-0 lg:bg-transparent lg:z-auto lg:col-span-4 space-y-6 flex flex-col shadow-2xl lg:shadow-none border-r border-slate-100 lg:border-none transition-all duration-300">
+              
+              {/* Mobile/Tablet drawer header */}
+              <div className="flex items-center justify-between lg:hidden pb-3 border-b border-slate-100 mb-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <Sliders size={16} />
+                  </div>
+                  <span className="font-bold text-sm text-slate-800">Configuration</span>
+                </div>
+                <button
+                  onClick={() => setShowSettingsSidebar(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                  title="Close sidebar"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
-            {/* Model downloader & managers */}
-            <ModelManager
-              models={models}
-              selectedModel={selectedModel}
-              onSelectModel={setSelectedModel}
-              onRefresh={() => fetchModelsList()}
-              isRefreshing={isRefreshingModels}
-              onPullModel={handlePullModel}
-              onDeleteModel={handleDeleteModel}
-              pullStatus={pullStatus}
-              isPulling={isPulling}
-              onShowModelDetails={handleShowModelDetails}
-            />
-
-            {/* Parameters sliders */}
-            {activeConversation && (
-              <ParameterSettings
-                parameters={activeConversation.parameters || DEFAULT_PARAMS}
-                onChange={handleUpdateParams}
+              {/* Connection configuration */}
+              <ConnectionSettings
+                config={connection}
+                hostInput={hostInput}
+                tokenInput={tokenInput}
+                setHostInput={setHostInput}
+                setTokenInput={setTokenInput}
+                onConnect={() => testAndConnect(hostInput, tokenInput)}
+                isConnecting={connection.isChecking}
+                onDisconnect={handleDisconnect}
+                hasServerDefaults={hasServerDefaults}
+                defaultHost={defaultHost}
               />
-            )}
-          </div>
+
+              {/* Model downloader & managers */}
+              <ModelManager
+                models={models}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                onRefresh={() => fetchModelsList()}
+                isRefreshing={isRefreshingModels}
+                onPullModel={handlePullModel}
+                onDeleteModel={handleDeleteModel}
+                pullStatus={pullStatus}
+                isPulling={isPulling}
+                onShowModelDetails={handleShowModelDetails}
+              />
+
+              {/* Parameters sliders */}
+              {activeConversation && (
+                <ParameterSettings
+                  parameters={activeConversation.parameters || DEFAULT_PARAMS}
+                  onChange={handleUpdateParams}
+                />
+              )}
+            </div>
+          </>
         )}
 
         {/* Right Chat Column (Grid Span 8 or 12) */}
-        <div className={`${showSettingsSidebar ? "lg:col-span-8" : "lg:col-span-12"} flex flex-col`}>
+        <div className={`${showSettingsSidebar ? "lg:col-span-8" : "lg:col-span-12"} flex flex-col min-w-0 h-full`}>
           <ChatInterface
             activeConversation={activeConversation}
             onSendMessage={handleSendMessage}
