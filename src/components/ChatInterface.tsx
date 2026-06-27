@@ -16,6 +16,8 @@ import {
   Trash2,
   Cpu,
   Info,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Conversation, Message } from "../types";
 import { parseReasoningContent, formatDuration } from "../utils/ollama";
@@ -48,6 +50,18 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [showThreadsSidebar, setShowThreadsSidebar] = useState<boolean>(() => {
+    const saved = localStorage.getItem("show_threads_sidebar");
+    return saved !== null ? saved === "true" : true;
+  });
+
+  const handleToggleThreadsSidebar = () => {
+    setShowThreadsSidebar((prev) => {
+      const nextValue = !prev;
+      localStorage.setItem("show_threads_sidebar", String(nextValue));
+      return nextValue;
+    });
+  };
   const [systemPromptInput, setSystemPromptInput] = useState(activeConversation?.systemPrompt || "");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -311,6 +325,19 @@ export default function ChatInterface({
       {/* Header */}
       <div className="px-6 py-4.5 bg-white border-b border-slate-100 flex items-center justify-between gap-4 select-none">
         <div className="flex items-center gap-3">
+          <button
+            id="toggle-threads-sidebar-btn"
+            onClick={handleToggleThreadsSidebar}
+            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+              showThreadsSidebar
+                ? "bg-indigo-50/50 border-indigo-100 text-indigo-600 hover:bg-indigo-50"
+                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+            }`}
+            title={showThreadsSidebar ? "Hide threads sidebar" : "Show threads sidebar"}
+          >
+            {showThreadsSidebar ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+          </button>
+
           <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
             <Sparkles size={20} className={isStreaming ? "animate-pulse text-indigo-600" : ""} />
           </div>
@@ -369,50 +396,52 @@ export default function ChatInterface({
       {/* Main chat window layout (sidebar inside chat for session listing + messages) */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Sessions list */}
-        <div className="w-56 border-r border-slate-100 flex flex-col bg-slate-50/40 shrink-0 select-none">
-          <div className="p-3 border-b border-slate-100/60">
-            <button
-              id="new-chat-session-btn"
-              onClick={onNewConversation}
-              className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 border border-indigo-100/30 transition-all cursor-pointer"
-            >
-              <Plus size={14} />
-              New Thread
-            </button>
-          </div>
+        {showThreadsSidebar && (
+          <div className="w-56 border-r border-slate-100 flex flex-col bg-slate-50/40 shrink-0 select-none animate-fade-in">
+            <div className="p-3 border-b border-slate-100/60">
+              <button
+                id="new-chat-session-btn"
+                onClick={onNewConversation}
+                className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 border border-indigo-100/30 transition-all cursor-pointer"
+              >
+                <Plus size={14} />
+                New Thread
+              </button>
+            </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {conversations.length === 0 ? (
-              <p className="text-[10px] text-slate-400 text-center py-6">No threads yet</p>
-            ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`group relative flex items-center justify-between p-2 rounded-lg transition-all ${
-                    activeConversation?.id === conv.id
-                      ? "bg-white border border-slate-100 text-indigo-600 font-semibold"
-                      : "text-slate-500 hover:bg-slate-100/60 hover:text-slate-700"
-                  }`}
-                >
-                  <button
-                    id={`select-session-${conv.id}`}
-                    onClick={() => onSelectConversation(conv.id)}
-                    className="flex-1 text-left text-xs truncate mr-4 pr-1 cursor-pointer"
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {conversations.length === 0 ? (
+                <p className="text-[10px] text-slate-400 text-center py-6">No threads yet</p>
+              ) : (
+                conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`group relative flex items-center justify-between p-2 rounded-lg transition-all ${
+                      activeConversation?.id === conv.id
+                        ? "bg-white border border-slate-100 text-indigo-600 font-semibold"
+                        : "text-slate-500 hover:bg-slate-100/60 hover:text-slate-700"
+                    }`}
                   >
-                    {conv.title}
-                  </button>
-                  <button
-                    id={`delete-session-${conv.id}`}
-                    onClick={() => onDeleteConversation(conv.id)}
-                    className="opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-opacity p-1 rounded hover:bg-rose-50 cursor-pointer"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))
-            )}
+                    <button
+                      id={`select-session-${conv.id}`}
+                      onClick={() => onSelectConversation(conv.id)}
+                      className="flex-1 text-left text-xs truncate mr-4 pr-1 cursor-pointer"
+                    >
+                      {conv.title}
+                    </button>
+                    <button
+                      id={`delete-session-${conv.id}`}
+                      onClick={() => onDeleteConversation(conv.id)}
+                      className="opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-opacity p-1 rounded hover:bg-rose-50 cursor-pointer"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Conversation Box */}
         <div className="flex-1 flex flex-col min-h-0 relative bg-slate-50/20">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Server, Terminal, MessageSquare, Zap, Github, ShieldAlert, Cpu } from "lucide-react";
+import { Server, Terminal, MessageSquare, Zap, Github, ShieldAlert, Cpu, Sliders } from "lucide-react";
 import ConnectionSettings from "./components/ConnectionSettings";
 import ModelManager from "./components/ModelManager";
 import ParameterSettings from "./components/ParameterSettings";
@@ -75,6 +75,20 @@ export default function App() {
   );
 
   const [isStreaming, setIsStreaming] = useState(false);
+
+  // Sidebar Visibility Config with local storage persistence
+  const [showSettingsSidebar, setShowSettingsSidebar] = useState<boolean>(() => {
+    const saved = localStorage.getItem("show_settings_sidebar");
+    return saved !== null ? saved === "true" : true;
+  });
+
+  const handleToggleSettingsSidebar = () => {
+    setShowSettingsSidebar((prev) => {
+      const nextValue = !prev;
+      localStorage.setItem("show_settings_sidebar", String(nextValue));
+      return nextValue;
+    });
+  };
 
   // Model Details Inspector Modal State
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -617,6 +631,22 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3 text-xs font-semibold">
+            <button
+              id="sidebar-toggle-btn"
+              onClick={handleToggleSettingsSidebar}
+              className={`p-2 px-3 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm/5 ${
+                showSettingsSidebar
+                  ? "bg-indigo-50/50 border-indigo-100 text-indigo-600 hover:bg-indigo-50"
+                  : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              }`}
+              title={showSettingsSidebar ? "Hide configuration controls" : "Show configuration controls"}
+            >
+              <Sliders size={14} />
+              <span className="hidden sm:inline font-bold">
+                {showSettingsSidebar ? "Hide Controls" : "Show Controls"}
+              </span>
+            </button>
+
             {connection.isConnected ? (
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -635,46 +665,48 @@ export default function App() {
       {/* Main Container Layout */}
       <main className="max-w-7xl mx-auto px-6 py-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
         {/* Left Control Column (Grid Span 4) */}
-        <div className="lg:col-span-4 space-y-6 flex flex-col">
-          {/* Connection configuration */}
-          <ConnectionSettings
-            config={connection}
-            hostInput={hostInput}
-            tokenInput={tokenInput}
-            setHostInput={setHostInput}
-            setTokenInput={setTokenInput}
-            onConnect={() => testAndConnect(hostInput, tokenInput)}
-            isConnecting={connection.isChecking}
-            onDisconnect={handleDisconnect}
-            hasServerDefaults={hasServerDefaults}
-            defaultHost={defaultHost}
-          />
-
-          {/* Model downloader & managers */}
-          <ModelManager
-            models={models}
-            selectedModel={selectedModel}
-            onSelectModel={setSelectedModel}
-            onRefresh={() => fetchModelsList()}
-            isRefreshing={isRefreshingModels}
-            onPullModel={handlePullModel}
-            onDeleteModel={handleDeleteModel}
-            pullStatus={pullStatus}
-            isPulling={isPulling}
-            onShowModelDetails={handleShowModelDetails}
-          />
-
-          {/* Parameters sliders */}
-          {activeConversation && (
-            <ParameterSettings
-              parameters={activeConversation.parameters || DEFAULT_PARAMS}
-              onChange={handleUpdateParams}
+        {showSettingsSidebar && (
+          <div className="lg:col-span-4 space-y-6 flex flex-col">
+            {/* Connection configuration */}
+            <ConnectionSettings
+              config={connection}
+              hostInput={hostInput}
+              tokenInput={tokenInput}
+              setHostInput={setHostInput}
+              setTokenInput={setTokenInput}
+              onConnect={() => testAndConnect(hostInput, tokenInput)}
+              isConnecting={connection.isChecking}
+              onDisconnect={handleDisconnect}
+              hasServerDefaults={hasServerDefaults}
+              defaultHost={defaultHost}
             />
-          )}
-        </div>
 
-        {/* Right Chat Column (Grid Span 8) */}
-        <div className="lg:col-span-8 flex flex-col">
+            {/* Model downloader & managers */}
+            <ModelManager
+              models={models}
+              selectedModel={selectedModel}
+              onSelectModel={setSelectedModel}
+              onRefresh={() => fetchModelsList()}
+              isRefreshing={isRefreshingModels}
+              onPullModel={handlePullModel}
+              onDeleteModel={handleDeleteModel}
+              pullStatus={pullStatus}
+              isPulling={isPulling}
+              onShowModelDetails={handleShowModelDetails}
+            />
+
+            {/* Parameters sliders */}
+            {activeConversation && (
+              <ParameterSettings
+                parameters={activeConversation.parameters || DEFAULT_PARAMS}
+                onChange={handleUpdateParams}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Right Chat Column (Grid Span 8 or 12) */}
+        <div className={`${showSettingsSidebar ? "lg:col-span-8" : "lg:col-span-12"} flex flex-col`}>
           <ChatInterface
             activeConversation={activeConversation}
             onSendMessage={handleSendMessage}
