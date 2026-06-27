@@ -1,0 +1,6 @@
+{
+  "name": "Ollama Cloud Client",
+  "description": "A web interface to connect with remote Ollama APIs, supporting custom endpoints, authentication, model listing, chatting, and parameters tuning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
